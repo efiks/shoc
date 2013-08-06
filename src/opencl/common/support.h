@@ -24,6 +24,10 @@
 //
 // ****************************************************************************
 
+#ifndef MIN
+#define MIN(a, b)  (((a) < (b)) ? (a) : (b))
+#endif
+
 inline const char *CLErrorString(cl_int err)
 {
     switch (err)
@@ -423,6 +427,37 @@ checkExtension( const cl::Device& dev, const std::string& ext )
 }
 
 
+// ****************************************************************************
+// Method:  getDeviceAllowableWorkGroupSize
+//
+// Purpose: 
+//   Finds the maximum valid allowable work group size for the specified device.
+//
+// Arguments:
+//       devid         OpenCL device
+//
+// Programmer:  Evgeny Fiksman
+// Creation:    September 6, 2012
+//
+// ****************************************************************************
+inline size_t
+getAllowableWorkGroupSize (cl_device_id devid, cl_kernel &ker)
+{
+    int err;
+    // Find the maximum work group size
+    size_t maxWorkGroupSize[3];
+    size_t maxGroupSize = 0;
+    
+    err = clGetKernelWorkGroupInfo (ker, devid, CL_KERNEL_COMPILE_WORK_GROUP_SIZE,
+        sizeof(maxWorkGroupSize), &maxWorkGroupSize, NULL);
+    CL_CHECK_ERROR(err);
+    
+    err = clGetKernelWorkGroupInfo (ker, devid, CL_KERNEL_WORK_GROUP_SIZE, sizeof(size_t),
+                &maxGroupSize, NULL);
+    CL_CHECK_ERROR(err);
+    
+    return (MIN(maxGroupSize, maxWorkGroupSize[0]*maxWorkGroupSize[1]*maxWorkGroupSize[2]));
+}
 
 #endif
 
